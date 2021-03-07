@@ -1,11 +1,13 @@
 BUSY
 
 Someone is taking a shit, pls wait
-The seat is being warmed up for you!
+The seat is currently being warmed up
+You can't enter unless you want to share seats
 
 
 AVAILABLE
 
 You're free to come king
-The throne is waiting for you to sit on it
-
+The throne is waiting for you
+Come and relax, but don't take too long
+Will you come sit on me to relieve yourself senpai?\nuwu
