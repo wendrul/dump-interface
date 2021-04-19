@@ -1,43 +1,24 @@
 #include <Arduino.h>
 #include <CapacitiveSensor.h>
+#include "LightController.h"
 
+#define SEND_PIN 4
+#define RECEIVE_PIN 2
+#define GREEN_COLOR 0x007706
+#define RED_COLOR 0x780010
 
-#define RED_PIN 6
-#define GREEN_PIN 9
-#define BLUE_PIN 5
-
-CapacitiveSensor   cs_4_2 = CapacitiveSensor(4,2);
-
-void changeColor(int r, int g, int b)
-{
-	analogWrite(RED_PIN, r);
-	analogWrite(GREEN_PIN, g);
-	analogWrite(BLUE_PIN, b);
-}
-
-void changeColor(long color)
-{
-	int r,g,b;
-
-	r = (color >> 16) & 255;
-	g = (color >> 8) & 255;
-	b = color & 255;
-	changeColor(r, g, b);
-}
+LightController *Lights;
 
 void setup()
 {
-	cs_4_2.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	pinMode(RED_PIN, OUTPUT);
-	pinMode(BLUE_PIN, OUTPUT);
-	pinMode(GREEN_PIN, OUTPUT);
+	Lights = new LightController(SEND_PIN, RECEIVE_PIN);
 }
 
 void loop()
 {
-	long ret = cs_4_2.capacitiveSensor(30);
-	if (ret > 5000)
-		changeColor(0x780010);
+	Lights->Update();
+	if (Lights->IsSitting())
+		Lights->ChangeColor(RED_COLOR);
 	else
-		changeColor(0x007706);
+		Lights->ChangeColor(GREEN_COLOR);
 }
