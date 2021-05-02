@@ -143,15 +143,20 @@ class PoopVoiceLines:
         self.isPlaying = True
         playsound.playsound(path)
         self.isPlaying = False
+
+    def playLineWait(self, path):
+        playsound.playsound(path)
     
     def playSpecificLine(self, voiceActor, lineName):
         for i in range(len(self.voiceLines[voiceActor])):
             if lineName == self.voiceLines[voiceActor][i] or lineName == self.voiceLines[voiceActor][i][0:-4]:
-                asyncio.run(self.__playLineAsync(self.getPathToLine(voiceActor, i)))
+                #asyncio.run(self.__playLineAsync(self.getPathToLine(voiceActor, i)))
+                self.playLineWait(self.getPathToLine(voiceActor, i))
                 return
         for i in range(len(self.constipationLines[voiceActor])):
             if lineName == self.constipationLines[voiceActor][i] or lineName == self.constipationLines[voiceActor][i][0:-4]:
-                asyncio.run(self.__playLineAsync(self.getPathToLine(voiceActor, i, lineType="constipation")))
+                #asyncio.run(self.__playLineAsync(self.getPathToLine(voiceActor, i, lineType="constipation")))
+                self.playLineWait(self.getPathToLine(voiceActor, i, lineType="constipation"))
                 return
         print(f"Failed to find {voiceActor}'s {lineName}", file=sys.stderr)
 
@@ -173,7 +178,8 @@ class PoopVoiceLines:
             print(f"No voicelines available for {voiceActor}", file=sys.stderr)
             return
         i = random.choice(possible)
-        asyncio.run(self.__playLineAsync(self.getPathToLine(voiceActor, i, lineType=lineType)))
+        #asyncio.run(self.__playLineAsync(self.getPathToLine(voiceActor, i, lineType=lineType)))
+        self.playLineWait(self.getPathToLine(voiceActor, i, lineType=lineType))
 
     def playRandomLine(self, lineType="splash"):
         actor = random.choice(["Jayne", "Ren", "rgarnevo"])

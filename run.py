@@ -9,6 +9,9 @@ from scipy.signal import argrelextrema
 import math
 import asyncio
 import playsound
+import sys
+from PoopVoiceLines import PoopVoiceLines
+from SerialInterface import PooperInterface
 
 CHUNK = 8192
 FORMAT = pyaudio.paInt16
@@ -16,6 +19,8 @@ CHANNELS = 1
 RATE = 44100
 MAX_TIME_BUFFERED = 5
 VOL_TRESHOLD = 100000
+
+
 
 
 pa = pyaudio.PyAudio()
@@ -29,6 +34,16 @@ def callback(in_data, frame_count, time_info, flag):
     if (len(callback_output) > MAX_TIME_BUFFERED * (RATE / CHUNK)):
         callback_output.pop(0)
     return None, pyaudio.paContinue
+
+stream = pa.open(format=FORMAT,
+                 channels=CHANNELS,
+                 rate=RATE,
+                 output=False,
+                 input=True,
+                 stream_callback=callback,
+                 frames_per_buffer=CHUNK)
+
+stream.start_stream()
 
 
 def get_n_maxes(data, n):
@@ -45,17 +60,6 @@ def get_n_maxes(data, n):
         ret.append(M)
     return ret
 
-stream = pa.open(format=FORMAT,
-                 channels=CHANNELS,
-                 rate=RATE,
-                 output=False,
-                 input=True,
-                 stream_callback=callback,
-                 frames_per_buffer=CHUNK)
-
-stream.start_stream()
-
-time.sleep(2)
 
 def JoinData(output, numberOfChunks):
     """
@@ -101,34 +105,40 @@ async def AnalyzeSpike(data):
     certainFactor -= isFreqInMaxes(2780, maxes, fft_data, fft_freq, freqRange=100) * 0.5
     certainFactor -= isFreqInMaxes(280, maxes, fft_data, fft_freq, freqRange=100) * 0.5
     certainFactor += isFreqInMaxes(50, maxes1, fft_data, fft_freq, freqRange=20)
-    print(certainFactor)
 
     if (certainFactor > 2.3):
-        #print("success!")
-        playsound.playsound("poop.mp3")
+        print("poop", file=sys.stderr)
+        voices.playRandomLine()
     # for x in maxes:
         # print (f"{abs(fft_data[x]):.1f}, {fft_freq[x]:.1f}")
     # print("        ")
+
+voices = PoopVoiceLines()
+ser = PooperInterface(port='COM3')
 
 detect = False
 t_last = time.time()
 t = 0
 last_vol = 0
 while stream.is_active():
+    ser.UpdateStatus()
     dt = time.time() - t_last
     t_last = time.time()
-    vol = np.linalg.norm(callback_output[-5])
-    if (abs(vol - last_vol) > 10**-2):   
-        if (vol > VOL_TRESHOLD):
-            detect = True
-            t = 0
-            asyncio.run(AnalyzeSpike(JoinData(callback_output, 5)))
-    last_vol = vol
-    if detect == True:
+    if (ser.IsSitting()):
+        vol = np.linalg.norm(callback_output[-5])
+        if (abs(vol - last_vol) > 10**-2):   
+            if (vol > VOL_TRESHOLD):
+                t = 0
+                asyncio.run(AnalyzeSpike(JoinData(callback_output, 5)))
+        last_vol = vol
         t += dt
-        if t >= 1.5:
+        print(t)
+        if t >= 20:
             detect = False
-            print("\n\n\n----------------------\nEND\n----------------------\n\n\n")    
+            voices.playRandomLine(lineType="constipation")
+            t = 0
+    else:
+        t = 0
     # fft_data = np.fft.rfft(callback_output[-1]) # rfft removes the mirrored part that fft generates
     # fft_freq = np.fft.rfftfreq(len(callback_output[-1]), d=1/44100) # rfftfreq needs the signal data, not the fft data
     # plt.plot(fft_freq, np.absolute(fft_data)) # fft_data is a complex number, so the magnitude is computed here
