@@ -132,7 +132,6 @@ while stream.is_active():
                 asyncio.run(AnalyzeSpike(JoinData(callback_output, 5)))
         last_vol = vol
         t += dt
-        print(t)
         if t >= 20:
             detect = False
             voices.playRandomLine(lineType="constipation")
