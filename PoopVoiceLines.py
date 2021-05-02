@@ -69,6 +69,7 @@ class PoopVoiceLines:
         self.dirname = dirname
         self.isPlaying = False
         random.seed()
+        self.checkFileIntegrity()
 
     def getPathToLine(self, voiceActor : str, index, lineType="splash"):
         if (lineType == "constipation"):
@@ -139,8 +140,3 @@ class PoopVoiceLines:
     def playRandomLine(self, lineType="splash"):
         actor = random.choice(["Jayne", "Ren", "rgarnevo"])
         self.playRandomLineFrom(actor, lineType=lineType)
-
-vl = PoopVoiceLines()
-vl.checkFileIntegrity()
-vl.playRandomLine()
-vl.playRandomLine()

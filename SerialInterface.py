@@ -2,7 +2,7 @@ import serial, time, sys
 
 
 class PooperInterface:
-    def __init__(self, baudrate=9600, port='COM4', timeout = 2):
+    def __init__(self, baudrate=115200, port='COM4', timeout = 2):
         print(f"Opening connection o serial port '{port}' at baud {baudrate}...", file=sys.stderr)
         self.ser = serial.Serial(port, baudrate, timeout=timeout, write_timeout=timeout)
         print("Connection succesful", file=sys.stderr)
@@ -23,7 +23,7 @@ class PooperInterface:
                 if ("sitting" in u):
                     self.sitting = "true" in u
                 if ("paperWeight" in u):
-                    self.paperRollWeight = float(u.split(' ')[1])
+                    self.paperRollWeight = float(u.split(' ')[-1])
 
     def IsSitting(self):
         return self.sitting
