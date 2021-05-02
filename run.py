@@ -10,6 +10,7 @@ import math
 import asyncio
 import playsound
 import sys
+import random
 from PoopVoiceLines import PoopVoiceLines
 from SerialInterface import PooperInterface
 
@@ -113,6 +114,34 @@ async def AnalyzeSpike(data):
         # print (f"{abs(fft_data[x]):.1f}, {fft_freq[x]:.1f}")
     # print("        ")
 
+with open("messages/samples.txt") as msgs:
+    lines = msgs.readlines()
+    availableSamples = []
+    busySamples = []
+    turn = 0
+    for l in lines:
+        if len (l) < 3:
+            continue
+        if "AVAILABLE" in l:
+            turn = 1
+            continue
+        elif "BUSY" in l:
+            turn = 2
+            continue
+        if turn == 1:
+            availableSamples.append(l)
+        elif turn == 2:
+            busySamples.append(l)
+
+
+def OnSitUp():
+    print(random.choice(availableSamples))
+
+def OnSitDown():
+    print(random.choice(busySamples))
+
+OnSitUp()
+
 voices = PoopVoiceLines()
 ser = PooperInterface(port='COM3')
 
@@ -120,11 +149,15 @@ detect = False
 t_last = time.time()
 t = 0
 last_vol = 0
+wasActive = False
 while stream.is_active():
     ser.UpdateStatus()
     dt = time.time() - t_last
     t_last = time.time()
     if (ser.IsSitting()):
+        if (not wasActive):
+            OnSitDown()
+        wasActive = True
         vol = np.linalg.norm(callback_output[-5])
         if (abs(vol - last_vol) > 10**-2):   
             if (vol > VOL_TRESHOLD):
@@ -137,7 +170,11 @@ while stream.is_active():
             voices.playRandomLine(lineType="constipation")
             t = 0
     else:
+        if (wasActive):
+            OnSitUp()
         t = 0
+        wasActive = False
+
     # fft_data = np.fft.rfft(callback_output[-1]) # rfft removes the mirrored part that fft generates
     # fft_freq = np.fft.rfftfreq(len(callback_output[-1]), d=1/44100) # rfftfreq needs the signal data, not the fft data
     # plt.plot(fft_freq, np.absolute(fft_data)) # fft_data is a complex number, so the magnitude is computed here
