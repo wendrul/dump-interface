@@ -104,11 +104,11 @@ async def AnalyzeSpike(data):
     print(certainFactor)
 
     if (certainFactor > 2.3):
-        print("success!")
+        #print("success!")
         playsound.playsound("poop.mp3")
-    for x in maxes:
-        print (f"{abs(fft_data[x]):.1f}, {fft_freq[x]:.1f}")
-    print("        ")
+    # for x in maxes:
+        # print (f"{abs(fft_data[x]):.1f}, {fft_freq[x]:.1f}")
+    # print("        ")
 
 detect = False
 t_last = time.time()
