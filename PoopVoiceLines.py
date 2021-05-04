@@ -2,6 +2,9 @@
 import os, playsound, sys
 import random
 import asyncio
+from pydub import AudioSegment
+from pydub.playback import play
+
 
 
 class PoopVoiceLines:
@@ -83,8 +86,8 @@ class PoopVoiceLines:
         self.constipationLines = {
             "Jayne" : ["evacuateBowels.mp3",
                     "evacuateBowels2.mp3",
-                    "pushYouCan.mp3",
-                    "pushYouCan2.mp3"],
+                    "pushYoucan.mp3",
+                    "pushYoucan2.mp3"],
             "Ren" : ["BowelEvacuation.mp3",
                     "keepGoing.mp3",
                     "keepGoing2.mp3",
@@ -145,7 +148,8 @@ class PoopVoiceLines:
         self.isPlaying = False
 
     def playLineWait(self, path):
-        playsound.playsound(path)
+        sound = AudioSegment.from_mp3(path)
+        play(sound)
     
     def playSpecificLine(self, voiceActor, lineName):
         for i in range(len(self.voiceLines[voiceActor])):
