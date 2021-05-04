@@ -1,18 +1,17 @@
-import pyaudio
 import numpy as np
 import time
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-from matplotlib import style
 import scipy
 from scipy.signal import argrelextrema
 import math
 import asyncio
-import playsound
+import pyaudio
 import sys
 import random
+import playsound
 from PoopVoiceLines import PoopVoiceLines
 from SerialInterface import PooperInterface
+from FullScreenMSG import FullScreenMSG
+import tkinter as tk
 
 CHUNK = 8192
 FORMAT = pyaudio.paInt16
@@ -20,8 +19,6 @@ CHANNELS = 1
 RATE = 44100
 MAX_TIME_BUFFERED = 5
 VOL_TRESHOLD = 100000
-
-
 
 
 pa = pyaudio.PyAudio()
@@ -133,17 +130,22 @@ with open("messages/samples.txt") as msgs:
         elif turn == 2:
             busySamples.append(l)
 
+root = tk.Tk()
+FS_Display = FullScreenMSG(root)
 
 def OnSitUp():
-    print(random.choice(availableSamples))
+    FS_Display.ChangeBackgroundColor("green")
+    FS_Display.PrintMsg(random.choice(availableSamples))
 
 def OnSitDown():
-    print(random.choice(busySamples))
+    FS_Display.ChangeBackgroundColor("red")
+    FS_Display.PrintMsg(random.choice(busySamples))
 
 OnSitUp()
+root.update()
 
 voices = PoopVoiceLines()
-ser = PooperInterface(port='COM3')
+ser = PooperInterface(port='/dev/ttyUSB0')
 
 detect = False
 t_last = time.time()
@@ -151,29 +153,34 @@ t = 0
 last_vol = 0
 wasActive = False
 while stream.is_active():
-    ser.UpdateStatus()
-    dt = time.time() - t_last
-    t_last = time.time()
-    if (ser.IsSitting()):
-        if (not wasActive):
-            OnSitDown()
-        wasActive = True
-        vol = np.linalg.norm(callback_output[-5])
-        if (abs(vol - last_vol) > 10**-2):   
-            if (vol > VOL_TRESHOLD):
+    try:
+        root.update_idletasks()
+        ser.UpdateStatus()
+        dt = time.time() - t_last
+        t_last = time.time()
+        if (ser.IsSitting()):
+            if (not wasActive):
+                OnSitDown()
+            wasActive = True
+            vol = np.linalg.norm(callback_output[-5])
+            if (abs(vol - last_vol) > 10**-2):   
+                if (vol > VOL_TRESHOLD):
+                    t = 0
+                    asyncio.run(AnalyzeSpike(JoinData(callback_output, 5)))
+            last_vol = vol
+            t += dt
+            if t >= 20:
+                detect = False
+                voices.playRandomLine(lineType="constipation")
                 t = 0
-                asyncio.run(AnalyzeSpike(JoinData(callback_output, 5)))
-        last_vol = vol
-        t += dt
-        if t >= 20:
-            detect = False
-            voices.playRandomLine(lineType="constipation")
+        else:
+            if (wasActive):
+                OnSitUp()
             t = 0
-    else:
-        if (wasActive):
-            OnSitUp()
-        t = 0
-        wasActive = False
+            wasActive = False
+    except KeyboardInterrupt:
+        print("exit uwu", file=sys.stderr)
+        break
 
     # fft_data = np.fft.rfft(callback_output[-1]) # rfft removes the mirrored part that fft generates
     # fft_freq = np.fft.rfftfreq(len(callback_output[-1]), d=1/44100) # rfftfreq needs the signal data, not the fft data
